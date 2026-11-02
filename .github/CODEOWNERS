@@ -4,8 +4,8 @@
 # Default owner for anything not listed below
 *               @finance-ai-sandbox/governance-owners
 
-# Agent definitions
-/agents/        @finance-ai-sandbox/agent-owners
+# FP&A Agent definitions
+/fpa/           @finance-ai-sandbox/agent-owners
 
 # Governance policies and control documents
 /governance/    @finance-ai-sandbox/governance-owners
