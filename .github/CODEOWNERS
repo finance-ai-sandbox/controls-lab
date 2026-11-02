@@ -1,13 +1,14 @@
-# Last matching line wins. Order from general to specific.
+# CODEOWNERS for controls-lab
+# The LAST matching line wins, so the catch-all goes first.
 
-# Default: anything not matched below
-*               @finance-ai-sandbox/agent-owners
+# Default owner for anything not listed below
+*               @finance-ai-sandbox/governance-owners
 
-# Agents by finance function
-/fpa/           @finance-ai-sandbox/agent-owners
+# Agent definitions
+/agents/        @finance-ai-sandbox/agent-owners
 
-# Governance policies need governance sign-off
+# Governance policies and control documents
 /governance/    @finance-ai-sandbox/governance-owners
 
-# Changes to ownership rules and workflows need governance sign-off
+# Ownership rules and workflows are themselves governed
 /.github/       @finance-ai-sandbox/governance-owners
