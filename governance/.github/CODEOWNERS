@@ -1,0 +1,13 @@
+# Last matching line wins. Order from general to specific.
+
+# Default: anything not matched below
+*               @finance-ai-sandbox/agent-owners
+
+# Agents by finance function
+/fpa/           @finance-ai-sandbox/agent-owners
+
+# Governance policies need governance sign-off
+/governance/    @finance-ai-sandbox/governance-owners
+
+# Changes to ownership rules and workflows need governance sign-off
+/.github/       @finance-ai-sandbox/governance-owners
