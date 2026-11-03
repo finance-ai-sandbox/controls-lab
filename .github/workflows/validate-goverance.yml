@@ -1,0 +1,60 @@
+name: validate-governance
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check CODEOWNERS paths exist
+        id: codeowners
+        run: |
+          missing=0
+          while read -r path owners; do
+            case "$path" in ""|\#*|*\**) continue ;; esac
+            target="${path#/}"
+            if [ ! -e "$target" ]; then
+              echo "::error file=.github/CODEOWNERS::Path $path matches no file or folder"
+              missing=$((missing+1))
+            fi
+          done < .github/CODEOWNERS
+          echo "missing=$missing" >> "$GITHUB_OUTPUT"
+
+      - name: Check governance header fields
+        id: headers
+        run: |
+          missing=0
+          for f in governance/*.md; do
+            [ -e "$f" ] || continue
+            for field in "Version" "Owner" "Last reviewed" "Approver"; do
+              if ! grep -qiF "$field:" "$f"; then
+                echo "::error file=$f::Missing header field '$field:'"
+                missing=$((missing+1))
+              fi
+            done
+          done
+          echo "missing=$missing" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize and decide
+        if: always()
+        env:
+          CO_MISSING: ${{ steps.codeowners.outputs.missing }}
+          HDR_MISSING: ${{ steps.headers.outputs.missing }}
+        run: |
+          echo "## Governance validation" >> "$GITHUB_STEP_SUMMARY"
+          echo "- CODEOWNERS paths with no match: $CO_MISSING" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Missing governance header fields: $HDR_MISSING" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$CO_MISSING" != "0" ] || [ "$HDR_MISSING" != "0" ]; then
+            echo "Governance validation FAILED"
+            exit 1
+          fi
+          echo "Governance validation PASSED"
