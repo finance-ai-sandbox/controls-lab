@@ -1,0 +1,92 @@
+name: Release agent
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent_id:
+        description: "Portfolio ID of the agent being released (e.g. FIN-001)"
+        required: true
+        default: "FIN-001"
+      change_ref:
+        description: "PR or change ticket that approved this version (e.g. PR #7)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    env:
+      AGENT_ID: ${{ inputs.agent_id }}
+      CHANGE_REF: ${{ inputs.change_ref }}
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Confirm the agent folder is complete
+        run: |
+          if [ ! -f fpa/demo-agent/README.md ]; then
+            echo "::error file=fpa/demo-agent/README.md::Agent README is missing"
+            exit 1
+          fi
+          echo "Agent README found."
+
+      - name: Build the release evidence file
+        run: |
+          mkdir -p evidence
+          {
+            echo "Release evidence"
+            echo "Agent ID:        $AGENT_ID"
+            echo "Change ref:      $CHANGE_REF"
+            echo "Branch:          $GITHUB_REF_NAME"
+            echo "Commit:          $GITHUB_SHA"
+            echo "Requested by:    $GITHUB_ACTOR"
+            echo "Run ID:          $GITHUB_RUN_ID"
+            echo "Validated (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > evidence/release-evidence.txt
+          cat evidence/release-evidence.txt
+
+      - name: Upload the evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-evidence-${{ inputs.agent_id }}-${{ github.run_id }}
+          path: evidence/release-evidence.txt
+          retention-days: 30
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-24.04
+    environment:
+      name: client-production
+    env:
+      AGENT_ID: ${{ inputs.agent_id }}
+    steps:
+      - name: Download the evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: release-evidence-${{ inputs.agent_id }}-${{ github.run_id }}
+
+      - name: Deploy (simulated)
+        run: |
+          echo "Deploying $AGENT_ID to client-production (simulated; nothing leaves the runner)."
+          echo "Deployment started at $(date -u +%Y-%m-%dT%H:%M:%SZ) in run $GITHUB_RUN_ID."
+
+      - name: Write the release summary
+        run: |
+          {
+            echo "## Release to client-production"
+            echo ""
+            echo "| Item | Value |"
+            echo "|---|---|"
+            echo "| Agent | $AGENT_ID |"
+            echo "| Commit | $GITHUB_SHA |"
+            echo "| Requested by | $GITHUB_ACTOR |"
+            echo "| Run | $GITHUB_RUN_ID |"
+            echo ""
+            echo "Approver and comment: see the deployment review on this run."
+            echo ""
+            echo '```'
+            cat release-evidence.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
