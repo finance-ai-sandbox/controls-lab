@@ -22,7 +22,7 @@ jobs:
       CHANGE_REF: ${{ inputs.change_ref }}
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Confirm the agent folder is complete
         run: |
@@ -48,7 +48,7 @@ jobs:
           cat evidence/release-evidence.txt
 
       - name: Upload the evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: release-evidence-${{ inputs.agent_id }}-${{ github.run_id }}
           path: evidence/release-evidence.txt
@@ -63,7 +63,7 @@ jobs:
       AGENT_ID: ${{ inputs.agent_id }}
     steps:
       - name: Download the evidence
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-evidence-${{ inputs.agent_id }}-${{ github.run_id }}
 
