@@ -1,0 +1,2 @@
+   # 13C-1 push protection test. Token has no access and is revoked after the test.
+   LAB_TEST_TOKEN=<paste the token here>
