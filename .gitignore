@@ -1,0 +1,12 @@
+# No client data in this repo. Enforced by the data-boundary check (13C-2).
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.csv
+*.tsv
+*.parquet
+*.zip
+*.7z
+data/
+extracts/
