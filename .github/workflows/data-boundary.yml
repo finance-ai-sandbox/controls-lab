@@ -1,0 +1,36 @@
+name: data-boundary
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the pull request
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Block data files and extracts
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          changed=$(git diff --name-only --diff-filter=AMR "$BASE_SHA...$HEAD_SHA")
+          echo "Files added or changed in this PR:"
+          echo "$changed"
+          found=$(echo "$changed" | grep -Ei '\.(xlsx|xls|xlsm|xlsb|csv|tsv|parquet|zip|7z)$|(^|/)(data|extracts)/' || true)
+          if [ -n "$found" ]; then
+            while IFS= read -r f; do
+              echo "::error file=$f::Data file or extract not allowed (no-client-data rule)"
+            done <<< "$found"
+            echo "## Data boundary: FAILED" >> "$GITHUB_STEP_SUMMARY"
+            echo "$found" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo "## Data boundary: passed" >> "$GITHUB_STEP_SUMMARY"
